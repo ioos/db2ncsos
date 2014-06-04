@@ -27,6 +27,8 @@ while (my (
 
 - station_list.txt contains a listing of $platform_handle = $organization.$name.$type like 'fau.lobo_1.'
 
+- ncSOS_template_test.txt global attributes modified as case-specific
+
 - gen_platform_list.pl provides bash and xml content
 
 
