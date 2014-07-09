@@ -1,0 +1,3 @@
+usf,http://comps.marine.usf.edu,usf.c10.mcat,station_data_c10
+usf,http://comps.marine.usf.edu,usf.c12.mcat,station_data_c12
+usf,http://comps.marine.usf.edu,usf.c13.mcat,station_data_c13
