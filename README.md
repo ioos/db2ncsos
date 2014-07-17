@@ -54,12 +54,12 @@ while (my (
 
 run 'bash start_archive.sh' which calls
  
-perl xenia_to_netcdf_file.pl archive
-bash mk_archive.sh
+- perl xenia_to_netcdf_file.pl archive
+- bash mk_archive.sh
 
 with sample station_list_file.txt and temp_buoy files to produce platform combined files.  This works using a simple date/value listing and initial metadata header line(obs_type,uom_type,longitude,latitude,depth(positive meters),s_order) in the buoy files along with some platform metadata and file search pattern in the station_list_file.txt file
 
 This approach allows creation of a combined platform file from several individual output time-series files tagged with similar filename prefixes and header line metadata.
 
-#2014-07-17 Made changes to xenia_to_netcdf_file.pl script to multi-step process as I was running into what I think were print buffer issues with large(70 MB files) that were failing to print to the output file.  I have not made these changes to the earlier xenia_to_netcdf.pl script, but this may require similar changes to correct if generated file data size is greater than several MB,etc.
+2014-07-17 Made changes to xenia_to_netcdf_file.pl script to multi-step process as I was running into what I think were print buffer issues with large(70 MB files) that were failing to print to the output file.  I have not made these changes to the earlier xenia_to_netcdf.pl script, but this may require similar changes to correct if generated file data size is greater than several MB,etc.
 
