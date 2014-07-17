@@ -1,13 +1,14 @@
 #!/usr/bin/perl
-#xenia_sqlite_to_obskml.pl
 
-# This script reads from the multi_obs table and creates latest hours GeoJSON data file for each platform
-
-#note 'where m_date > now()' is based on EST/EDT which gives us a 4-5 hour window for latest obs in consideration, will need to add/subtract additional hours for other time zones
+# perl xenia_to_netcdf_file.pl archive
+# will produce 'archive' suffixed files
+# note time-series data value separator (, tab, etc)
+# note input file path (temp_buoy, etc)
 
 print `date`;
 
 use strict;
+#use warnings;
 use Config::IniFiles;
 use DBI;
 
@@ -23,6 +24,8 @@ chomp($db_date_now);
 
 my $dir_monthly = "";
 my $id_suffix = "";
+
+my $cmd;
 
 ###################################################
 open(FILE,"netcdf/station_list_file.txt");
@@ -75,15 +78,17 @@ my $sorder = '';
 
 #my $pattern1 = @ARGV[0]; #like 'buoy6';
 print $pattern1."\n";
-my @files = <temp_buoy/$pattern1*>;
+#my @files = <temp_buoy/$pattern1*>;
+#my @files = <buoy_csv/crcoos/$pattern1*>;
+my @files = <buoy_csv/cormp/$pattern1*>;
 foreach my $file (@files) {
 print "file:".$file."\n";
 
 open(FILE_DATA, $file);
 foreach my $line(<FILE_DATA>) {
 
-#my ($m_date,$m_value) = split(/\t/,$line);
-my ($m_date,$m_value) = split(/,/,$line);
+my ($m_date,$m_value) = split(/\t/,$line);
+#my ($m_date,$m_value) = split(/,/,$line);
 
 if ($m_date =~ /obs_type/) {
   ($junk1,$obs_type,$uom_type,$m_lon,$m_lat,$m_z,$sorder) = split(/=/,$m_date);
@@ -123,7 +128,7 @@ print "files finished\n";
 
 my $missing_z = '-99999'; #represents missing z value
 
-#process hash to GeoJSON file
+#process hash 
 foreach my $platform_handle (sort keys %{$r_latest_obs->{platform_list}}) {
 
 my $org_description = $latest_obs{platform_list}{$platform_handle}{org_description};
@@ -262,11 +267,6 @@ foreach my $m_date (sort keys %{$r_latest_obs->{platform_list}{$platform_handle}
   my $m_value = $latest_obs{platform_list}{$platform_handle}{obs_list}{$obs_type}{uom_list}{$uom_type}{sorder_list}{$sorder}{m_date}{$m_date}{m_value};
   #print "$obs_type:$m_value\n";
   if ($m_value eq '') { $m_value = -999.9; }
-  #$m_value = 44.2;
-
-  #if ($m_value ne '-999.9') {
-  #  if ($obs_type eq 'air_pressure' && $uom_type eq 'mb') { $m_value = $m_value*100; }
-  #}
 
   $datelist_copy{$m_date} = $m_value;
  
@@ -353,18 +353,23 @@ chop($time_list); #drop trailing comma
 $time_list = "time = $time_list ;\n\n";
 
 print "time finished\n";
+#print $all_value_list;
 
 ######################################################
-#write GeoJSON,KML file
 
 my ($org_name,$platform_name,$package_name) = split(/\./,$platform_handle);
 #$platform_handle =~ s/\./:/g ;
 
-
 ##netcdf########################
 open (NETCDF_FILE, ">$target_dir/$platform_handle\_data.cdm");
 
-my $nc_template = `cat netcdf/ncSOS_template_test.txt`;
+my $nc_template;
+open(my $fh, '<', 'netcdf/ncSOS_template_file.txt') or die "cannot open file1";
+{
+ local $/;
+ $nc_template = <$fh>;
+}
+close($fh);
 
 my $timeSeriesLength = 1; #FIX? - could make this smarter for additional stations in one file
 #$nc_template =~ s/<TIMESERIES_LENGTH>/$timeSeriesLength/g ;
@@ -383,8 +388,8 @@ $nc_template =~ s/<LON_LIST>/$platform_lon/g ;
 #$nc_template =~ s/<ALT_LIST>/$alt_list/g ;
 
 $nc_template =~ s/<OBS_METADATA>/$nc_obs_metadata/g ;
-$nc_template =~ s/<TIME_LIST>/$time_list/g ;
-$nc_template =~ s/<OBS_DATA>/$all_value_list/g ;
+#$nc_template =~ s/<TIME_LIST>/$time_list/g ;
+#$nc_template =~ s/<OBS_DATA>/$all_value_list/g ;
 
 $min_time = `date +"%Y-%m-%dT%H:%M:%SZ" --date='1970-01-01 $min_time seconds' -u`;
 chomp($min_time);
@@ -410,12 +415,23 @@ $nc_template =~ s/<KEYWORD_LIST>/$keyword_list/g ;
 $nc_template =~ s/<CREATOR_NAME>/$org_description/g ;
 $nc_template =~ s/<CREATOR_URL>/$org_url/g ;
 
+#note these should be listed in order as written directly to file
 print NETCDF_FILE $nc_template;
+
+print NETCDF_FILE $time_list;
+
+print NETCDF_FILE $all_value_list;
+
+print NETCDF_FILE "}";
+
 close (NETCDF_FILE);
 
+
 my $file_label = @ARGV[0];
-print "/usr/bin/ncgen -o $target_dir/nc/$dir_monthly$platform_handle\/$platform_handle.nc $target_dir/$platform_handle\_data.cdm";
-`/usr/bin/ncgen -o $target_dir/nc/$dir_monthly$platform_handle\/$platform_handle\_$file_label.nc $target_dir/$platform_handle\_data.cdm`;
+$cmd .= "/usr/bin/ncgen -o $target_dir/nc/$dir_monthly$platform_handle\/$platform_handle\_$file_label.nc $target_dir/$platform_handle\_data.cdm\n";
+print $cmd;
+#`/usr/bin/ncgen -o $target_dir/nc/$dir_monthly$platform_handle\/$platform_handle\_$file_label.nc $target_dir/$platform_handle\_data.cdm`;
+# since ncgen is run as separate process will need to remove created .cdm files manually
 #`rm $target_dir/$platform_handle\_data.cdm`;
 
 } #foreach $platform_handle - process hash to nc
@@ -427,6 +443,10 @@ print `date`;
 
 close(FILE);
 close(FILE_DATA);
+
+open(CMD_FILE,">mk_archive.sh");
+print CMD_FILE $cmd;
+close(CMD_FILE);
 
 exit 0;
 

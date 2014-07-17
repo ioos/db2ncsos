@@ -1,0 +1,103 @@
+netcdf <STATION_NAME> {
+dimensions:
+        name_strlen = <STATION_NAME_LENGTH> ;
+        time = UNLIMITED ;
+variables:
+	double time(time) ;
+		time:standard_name = "time" ;
+		time:long_name = "time" ;
+		time:units = "seconds since 1970-01-01 00:00:00 UTC" ;
+		time:axis = "T" ;
+		time:ioos_category = "Time" ;
+		time:calendar = "gregorian" ;
+        float lat ;
+                lat:units = "degrees_north" ;
+                lat:long_name = "station latitude" ;
+                lat:standard_name = "latitude" ;
+		lat:ioos_category = "Location" ;
+		lat:axis = "Y" ;
+		lat:data_min = <LAT_LIST> ;
+		lat:data_max = <LAT_LIST> ;
+        float lon ;
+                lon:units = "degrees_east" ;
+                lon:long_name = "station longitude" ;
+                lon:standard_name = "longitude" ;
+		lon:ioos_category = "Location" ;
+		lon:axis = "X" ;
+		lon:data_min = <LON_LIST> ;
+		lon:data_max = <LON_LIST> ;
+
+        char station_name(name_strlen) ;
+                station_name:cf_role = "timeseries_id" ;
+                station_name:long_name = "<STATION_NAME>" ;
+
+<OBS_METADATA>
+
+	int crs ; //this variable needed to be added to describe the coordinate reference system
+		crs:grid_mapping_name = "latitude_longitude" ;
+		crs:longitude_of_prime_meridian = 0. ;
+		crs:semi_major_axis = 6378137. ;
+		crs:inverse_flattening = 298.257223563 ;
+		crs:epsg_code = "EPSG:4326" ;
+
+// global attributes:
+                :Conventions = "CF-1.6" ;
+                :featureType = "timeSeries" ;
+                :title = "<STATION_NAME>" ;
+		:publisher_name = "SECOORA" ;
+                :publisher_url = "http://secoora.org" ;
+                :publisher_email = "jeremy.cothran@gmail.com" ;
+                :publisher_phone = "803-777-4469" ;
+		:Metadata_Conventions = "Unidata Dataset Discovery v1.0" ;
+                :cdm_data_type = "Station" ;
+        	:standard_name_vocabulary = "CF Standard Name Table v25" ;
+        	:summary = "" ; // Provide a useful summary or abstract for the data in the file.
+        	:id = "<ID>" ; 
+        	:source = "station" ; // The input data sources regardless of the method of production method used.
+        	:sea_name = "North Atlantic Ocean" ;
+        	:naming_authority = "org.secoora" ;
+        	:time_coverage_start = "<TIME_START>" ; // Use ISO8601 for date and time.
+        	:time_coverage_end = "<TIME_STOP>" ; // Use ISO8601 for date and time.
+        	:time_coverage_resolution = "point" ;
+        	:geospatial_lat_min = <MIN_LAT> ; 
+        	:geospatial_lat_max = <MAX_LAT> ; 
+        	:geospatial_lat_units = "degrees_north" ; 
+        	:geospatial_lat_resolution= "point" ; 
+        	:geospatial_lon_min = <MIN_LON> ; 
+        	:geospatial_lon_max = <MAX_LON> ; 
+        	:geospatial_lon_units = "degrees_east"; 
+        	:geospatial_lon_resolution= "point" ; 
+        	:geospatial_vertical_min = <MIN_VERT> ;
+        	:geospatial_vertical_max = <MAX_VERT> ; 
+        	:geospatial_vertical_units = "m" ; // Use UDUNITS compatible units, unclear about this from the data.
+        	:geospatial_vertical_resolution = "point" ; // For exapmple, "point" or "1 meter binned".
+        	:geospatial_vertical_positive = "down" ; // Use "up" or "down".
+        	:institution = "IOOS/SECOORA" ; // Institution of the person or group that collected the data.  An institution attribute can be used for each variable if variables come from more than one institution.
+        	:creator_name = "<CREATOR_NAME>" ; //  Name of who collected the data.
+        	:creator_url = "<CREATOR_URL>" ; //  URL for who collected the data.
+        	:creator_email = "" ; //  Email address for who collected the data.
+        	:project = "" ; //  Project the data was collected under.
+        	:processing_level = "" ; //  Provide a description of the processing or quality control level of the data.
+        	:references = "" ; //  Published or web-based references that describe the data or methods used to produce it.
+        	:keywords_vocabulary = "CF Standard Name Table v25" ;
+	        :keywords = "<KEYWORD_LIST>" ; 
+        	:acknowledgment = "" ; //  Text to use to properly acknowledge use of the data.
+        	:comment = "This is a data file from SECOORA" ; //  Provide useful additional information here.
+        	:contributor_name = "IOOS,SECOORA" ; //  A comma separated list of contributors to this data set.
+        	:contributor_role = "PROGRAM,IOOS RA,COLLECTOR" ; //  A comma separated list of their roles.
+        	:date_created = "<TIME_NOW>" ; 
+        	:date_modified = "<TIME_NOW>" ; 
+        	:date_issued = "<TIME_NOW>" ; 
+	        :history = "" ;
+        	:license = "The data may be used and redistributed for free but is not intended for legal use, since it may contain inaccuracies. Neither the data Contributor, SECOORA, NOAA nor the United States Government, nor any of their employees or contractors, makes any warranty, express or implied, including warranties of merchantability and fitness for a particular purpose, or assumes any legal liability for the accuracy, completeness, or usefulness, of this information." ; //  Describe the restrictions to data access and distribution.
+        	:metadata_link = "" ; //  This attribute provides a link to a complete metadata record for this data set or the collection that contains this data set.
+
+
+data:
+
+ lat = <LAT_LIST> ;
+
+ lon = <LON_LIST> ;
+ 
+ station_name = "<STATION_NAME_LIST>" ;
+

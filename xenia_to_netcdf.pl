@@ -1,7 +1,6 @@
 #!/usr/bin/perl
-#xenia_sqlite_to_obskml.pl
 
-# This script reads from the multi_obs table and creates latest hours GeoJSON data file for each platform
+# This script reads from the database query, processes to hash and creates ncSOS/NODC compatible netcdf file
 
 #note 'where m_date > now()' is based on EST/EDT which gives us a 4-5 hour window for latest obs in consideration, will need to add/subtract additional hours for other time zones
 
@@ -167,7 +166,7 @@ $datelist{$m_date} = -999.9;
 
 my $missing_z = '-99999'; #represents missing z value
 
-#process hash to GeoJSON file
+#process hash 
 foreach my $platform_handle (sort keys %{$r_latest_obs->{platform_list}}) {
 
 my $org_description = $latest_obs{platform_list}{$platform_handle}{org_description};
@@ -395,11 +394,9 @@ $time_list = "time = $time_list ;\n\n";
 
 
 ######################################################
-#write GeoJSON,KML file
 
 my ($org_name,$platform_name,$package_name) = split(/\./,$platform_handle);
 #$platform_handle =~ s/\./:/g ;
-
 
 ##netcdf########################
 open (NETCDF_FILE, ">$target_dir/$platform_handle\_data.cdm");
