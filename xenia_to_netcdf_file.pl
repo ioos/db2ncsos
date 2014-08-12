@@ -1,9 +1,11 @@
 #!/usr/bin/perl
 
 # perl xenia_to_netcdf_file.pl archive
-# will produce 'archive' suffixed files
+# above command line will produce '_archive' suffixed files
 # note time-series data value separator (, tab, etc)
-# note input file path (temp_buoy, etc)
+# note time-series NaN value to ignore
+# note input file path/pattern provided from station_list_file.txt 
+# note mk_archive.sh bash file produced run as a separate bash step
 
 print `date`;
 
@@ -32,6 +34,8 @@ open(FILE,"netcdf/station_list_file.txt");
 
 foreach my $line(<FILE>) {
 
+if ($line =~ /^#/) { next; }
+
 #min/max time
 my ($min_time,$max_time);
 my ($min_lat,$max_lat);
@@ -43,7 +47,6 @@ my ($org_name,$org_url,$platform,$pattern1) = split(/,/,$line);
 chomp($pattern1);
 print $platform."\n";
 
-#my $platform = @ARGV[0];
 
 #####################
 #config
@@ -59,14 +62,8 @@ my %datelist = ();
 my $r_datelist = \%datelist;
 
 
-#my $org_url = 'http://carolinasrcoos.org';
-#my $platform_handle = @ARGV[0]; # like 'carocoops.sun2.buoy';
 my $platform_handle = $platform; #like 'carocoops.sun2.buoy';
 my $platform_url = '';
-#my $obs_type = 'salinity';
-#my $uom_type = 'psu';
-#my $m_lon = -78.48;
-#my $m_lat = 33.83;
 
 my $junk1 = '';
 my $obs_type = '';
@@ -76,46 +73,74 @@ my $m_lat = '';
 my $m_z = '';
 my $sorder = '';
 
-#my $pattern1 = @ARGV[0]; #like 'buoy6';
+my @array_obs = ();
+
 print $pattern1."\n";
-#my @files = <temp_buoy/$pattern1*>;
-#my @files = <buoy_csv/crcoos/$pattern1*>;
-my @files = <buoy_csv/cormp/$pattern1*>;
+my @files = <$pattern1*>;
+
 foreach my $file (@files) {
 print "file:".$file."\n";
 
 open(FILE_DATA, $file);
 foreach my $line(<FILE_DATA>) {
+chomp($line);
 
-my ($m_date,$m_value) = split(/\t/,$line);
-#my ($m_date,$m_value) = split(/,/,$line);
+my $m_value = '';
+my @m_value = ();
+#my ($m_date,@m_value) = split(/\t/,$line);
+my ($m_date,@m_value) = split(/,/,$line);
 
-if ($m_date =~ /obs_type/) {
-  ($junk1,$obs_type,$uom_type,$m_lon,$m_lat,$m_z,$sorder) = split(/=/,$m_date);
-  chomp($sorder);
+if ($m_date =~ /platform/) {  #should be header line of file
+  ($junk1,$m_lon,$m_lat,@array_obs) = split(/=/,$m_date);
+
+  #print "$platform_handle:$obs_type:$uom_type:$m_date:$m_z:$sorder:$m_value\n"; #debug
+  $platform_handle = lc($platform_handle);
+
+  #$latest_obs{platform_list}{$platform_handle}{org_description} = $org_description;
+  $latest_obs{platform_list}{$platform_handle}{org_url} = $org_url;
+  $latest_obs{platform_list}{$platform_handle}{platform_url} = $platform_url;
+  $latest_obs{platform_list}{$platform_handle}{m_lon} = $m_lon;
+  $latest_obs{platform_list}{$platform_handle}{m_lat} = $m_lat;
+
+  my $array_obs_idx = 0;
+  while (@array_obs[$array_obs_idx] ne '') { 
+  #while ($array_obs_idx < 12) { 
+    #print @array_obs."\n";
+    #print @array_obs[$array_obs_idx]."\n";
+    $obs_type = @array_obs[$array_obs_idx];
+    $uom_type = @array_obs[$array_obs_idx+1];
+    $m_z = @array_obs[$array_obs_idx+2];
+    $sorder = @array_obs[$array_obs_idx+3];
+
+    $latest_obs{platform_list}{$platform_handle}{obs_list}{$obs_type}{uom_list}{$uom_type}{sorder_list}{$sorder}{uom_type} = $uom_type;
+    
+    if ($m_z eq "") { $m_z = '-5'; } #missing z value = -99999 ?
+    $latest_obs{platform_list}{$platform_handle}{obs_list}{$obs_type}{uom_list}{$uom_type}{sorder_list}{$sorder}{m_z} = $m_z;
+
+    $array_obs_idx += 4;
+  }
+
   next;
 }
 
-chomp($m_value);
-if ($m_value eq '\N') { next; }
-#print "$m_date:$m_value\n";
+my $array_obs_idx = 0;
+my $m_value_idx = 0;
+while (@array_obs[$array_obs_idx] ne '') { 
+  $obs_type = @array_obs[$array_obs_idx];
+  $uom_type = @array_obs[$array_obs_idx+1];
+  $sorder = @array_obs[$array_obs_idx+3];
 
+  $m_value = @m_value[$m_value_idx];
 
-#print "$platform_handle:$obs_type:$uom_type:$m_date:$m_z:$sorder:$m_value\n"; #debug
-$platform_handle = lc($platform_handle);
+  if ($m_value ne '\N' && $m_value ne 'NaN' && $m_value ne 'nan') { 
+    #print "$m_date:$m_value\n";
 
-#$latest_obs{platform_list}{$platform_handle}{org_description} = $org_description;
-$latest_obs{platform_list}{$platform_handle}{org_url} = $org_url;
-$latest_obs{platform_list}{$platform_handle}{platform_url} = $platform_url;
-$latest_obs{platform_list}{$platform_handle}{m_lon} = $m_lon;
-$latest_obs{platform_list}{$platform_handle}{m_lat} = $m_lat;
+    $latest_obs{platform_list}{$platform_handle}{obs_list}{$obs_type}{uom_list}{$uom_type}{sorder_list}{$sorder}{m_date}{$m_date}{m_value} = $m_value;
+  }
 
-$latest_obs{platform_list}{$platform_handle}{obs_list}{$obs_type}{uom_list}{$uom_type}{sorder_list}{$sorder}{uom_type} = $uom_type;
-
-if ($m_z eq "") { $m_z = '-5'; } #missing z value = -99999 ?
-$latest_obs{platform_list}{$platform_handle}{obs_list}{$obs_type}{uom_list}{$uom_type}{sorder_list}{$sorder}{m_z} = $m_z;
-
-$latest_obs{platform_list}{$platform_handle}{obs_list}{$obs_type}{uom_list}{$uom_type}{sorder_list}{$sorder}{m_date}{$m_date}{m_value} = $m_value;
+  $array_obs_idx += 4;
+  $m_value_idx += 1;
+}
 
 $datelist{$m_date} = -999.9;
 

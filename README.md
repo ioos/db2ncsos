@@ -63,3 +63,13 @@ This approach allows creation of a combined platform file from several individua
 
 2014-07-17 Made changes to xenia_to_netcdf_file.pl script to multi-step process as I was running into what I think were print buffer issues with large(70 MB files) that were failing to print to the output file.  I have not made these changes to the earlier xenia_to_netcdf.pl script, but this may require similar changes to correct if generated file data size is greater than several MB,etc.
 
+== August 12, 2014
+
+Modified xenia_to_netcdf_file.pl to accept several columns of observation data with first column representing timestamp for row observations
+
+File header line now lists like below example file containing water temperature and salinity
+platform=longitude=latitude=obs_type=uom_type=depth=sorder=obs_type=uom_type=depth=sorder...
+platform=-82.92=27.169=water_temperature=celsius=1=l=salinity=psu=1=1
+
+Initially used with converting matlab files to csv files, matlab to csv conversion scripts available on request
+
